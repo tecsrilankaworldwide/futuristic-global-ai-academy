@@ -1,0 +1,46 @@
+[
+  {
+    "content": "Phase 1 POC: Get Stripe integration playbook",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1 POC: Get PDF generation integration playbook",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1 POC: Create and test POC script (Stripe + Activity Completion + PDF Certificate)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1 POC: Fix until all POC tests passed",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1 POC: All user stories verified working",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Get design guidelines for child-first UI",
+    "status": "in_progress"
+  },
+  {
+    "content": "Phase 2: Build complete backend with all models and APIs",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 2: Build complete frontend with child-first UI",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 2: Seed 15-20 curated unplugged activities",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 2: End-to-end testing with testing agent",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 2: Fix all issues from testing",
+    "status": "pending"
+  }
+]
