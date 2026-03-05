@@ -1053,6 +1053,175 @@ async def get_admin_analytics(current_user: User = Depends(get_current_admin)):
         "total_completions": total_completions
     }
 
+# Enhanced Parent Routes
+@api_router.get("/parent/child-completions/{student_id}")
+async def get_child_completions(
+    student_id: str,
+    current_user: User = Depends(get_current_parent)
+):
+    """Get completion history for a specific child"""
+    # Verify parent-child link exists
+    link = await db.parent_child_links.find_one({
+        "parent_id": current_user.id,
+        "student_id": student_id
+    })
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    completions = await db.completions.find(
+        {"student_id": student_id}, {"_id": 0}
+    ).sort("completed_at", -1).limit(20).to_list(20)
+    
+    return completions
+
+@api_router.delete("/parent/unlink-child/{student_id}")
+async def unlink_child(
+    student_id: str,
+    current_user: User = Depends(get_current_parent)
+):
+    """Unlink a child from parent account"""
+    result = await db.parent_child_links.delete_one({
+        "parent_id": current_user.id,
+        "student_id": student_id
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Link not found")
+    return {"message": "Child unlinked successfully"}
+
+# Enhanced Teacher Routes
+@api_router.get("/teacher/my-activities")
+async def get_teacher_activities(
+    current_user: User = Depends(get_current_teacher)
+):
+    """Get all activities created by this teacher"""
+    activities = await db.activities.find(
+        {"created_by": current_user.id}, {"_id": 0}
+    ).to_list(1000)
+    return activities
+
+@api_router.get("/teacher/activity-stats/{activity_id}")
+async def get_activity_stats(
+    activity_id: str,
+    current_user: User = Depends(get_current_teacher)
+):
+    """Get completion stats for a specific activity"""
+    activity = await db.activities.find_one({"id": activity_id})
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    completions = await db.completions.find(
+        {"activity_id": activity_id}, {"_id": 0}
+    ).to_list(1000)
+    
+    total_completions = len(completions)
+    avg_time = 0
+    if total_completions > 0:
+        avg_time = sum(c.get("time_spent_minutes", 0) for c in completions) / total_completions
+    
+    return {
+        "activity_id": activity_id,
+        "total_completions": total_completions,
+        "average_time_minutes": round(avg_time, 1),
+        "recent_completions": completions[:10]
+    }
+
+@api_router.delete("/teacher/activities/{activity_id}")
+async def delete_teacher_activity(
+    activity_id: str,
+    current_user: User = Depends(get_current_teacher)
+):
+    """Delete an activity created by this teacher"""
+    activity = await db.activities.find_one({"id": activity_id, "created_by": current_user.id})
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found or not yours")
+    
+    await db.activities.delete_one({"id": activity_id})
+    return {"message": "Activity deleted"}
+
+@api_router.put("/teacher/activities/{activity_id}")
+async def update_teacher_activity(
+    activity_id: str,
+    activity_data: ActivityCreate,
+    current_user: User = Depends(get_current_teacher)
+):
+    """Update an activity created by this teacher"""
+    existing = await db.activities.find_one({"id": activity_id, "created_by": current_user.id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Activity not found or not yours")
+    
+    update_data = activity_data.model_dump()
+    await db.activities.update_one(
+        {"id": activity_id},
+        {"$set": update_data}
+    )
+    return {"message": "Activity updated"}
+
+# Enhanced Leaderboard
+@api_router.get("/leaderboard/weekly")
+async def get_weekly_leaderboard():
+    """Get weekly leaderboard based on completions this week"""
+    one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    
+    # Get completions from the past week
+    pipeline = [
+        {"$match": {"completed_at": {"$gte": one_week_ago}}},
+        {"$group": {
+            "_id": "$student_id",
+            "weekly_completions": {"$sum": 1},
+            "weekly_points": {"$sum": 10}
+        }},
+        {"$sort": {"weekly_points": -1}},
+        {"$limit": 50}
+    ]
+    
+    weekly_data = await db.completions.aggregate(pipeline).to_list(50)
+    
+    result = []
+    for entry in weekly_data:
+        user = await db.users.find_one({"id": entry["_id"]}, {"_id": 0, "hashed_password": 0})
+        if user:
+            result.append({
+                "rank": len(result) + 1,
+                "student_name": user.get("full_name", "Anonymous"),
+                "points": entry["weekly_points"],
+                "activities_completed": entry["weekly_completions"],
+                "badges_count": 0
+            })
+    
+    return result
+
+@api_router.get("/leaderboard/monthly")
+async def get_monthly_leaderboard():
+    """Get monthly leaderboard based on completions this month"""
+    one_month_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    
+    pipeline = [
+        {"$match": {"completed_at": {"$gte": one_month_ago}}},
+        {"$group": {
+            "_id": "$student_id",
+            "monthly_completions": {"$sum": 1},
+            "monthly_points": {"$sum": 10}
+        }},
+        {"$sort": {"monthly_points": -1}},
+        {"$limit": 50}
+    ]
+    
+    monthly_data = await db.completions.aggregate(pipeline).to_list(50)
+    
+    result = []
+    for entry in monthly_data:
+        user = await db.users.find_one({"id": entry["_id"]}, {"_id": 0, "hashed_password": 0})
+        if user:
+            result.append({
+                "rank": len(result) + 1,
+                "student_name": user.get("full_name", "Anonymous"),
+                "points": entry["monthly_points"],
+                "activities_completed": entry["monthly_completions"],
+                "badges_count": 0
+            })
+    
+    return result
+
 # Health check
 @api_router.get("/")
 async def root():

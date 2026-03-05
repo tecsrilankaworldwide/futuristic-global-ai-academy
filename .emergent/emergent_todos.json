@@ -1,10 +1,26 @@
 [
   {
-    "content": "Phase 6: Production deployment guide created",
+    "content": "Build Parent Dashboard (manage children, view their progress)",
     "status": "completed"
   },
   {
-    "content": "ALL PHASES COMPLETE: Multilingual platform with voice, dashboards, leaderboard, 38 activities",
+    "content": "Build Teacher Dashboard (create custom activities, manage students)",
     "status": "completed"
+  },
+  {
+    "content": "Build Leaderboard (points system, rankings)",
+    "status": "completed"
+  },
+  {
+    "content": "Add missing backend endpoints for all features",
+    "status": "completed"
+  },
+  {
+    "content": "Test all new features",
+    "status": "in_progress"
+  },
+  {
+    "content": "Push to GitHub",
+    "status": "pending"
   }
 ]
