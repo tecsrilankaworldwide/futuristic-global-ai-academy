@@ -3,7 +3,7 @@
 ## 📋 Full User Flow
 
 ### **STEP 1: Landing Page**
-**URL:** https://tech-excellence-8.preview.emergentagent.com
+**URL:** https://learn-unplugged-1.preview.emergentagent.com
 
 **What User Sees:**
 - 🎓 Hero section with platform intro
@@ -21,7 +21,7 @@
 ---
 
 ### **STEP 2: Registration**
-**URL:** https://tech-excellence-8.preview.emergentagent.com/register
+**URL:** https://learn-unplugged-1.preview.emergentagent.com/register
 
 **Form Fields:**
 1. Full Name
@@ -42,7 +42,7 @@
 ---
 
 ### **STEP 3: Student Dashboard (After Registration)**
-**URL:** https://tech-excellence-8.preview.emergentagent.com/dashboard
+**URL:** https://learn-unplugged-1.preview.emergentagent.com/dashboard
 
 **What Student Sees:**
 - Welcome message with their name
@@ -70,7 +70,7 @@
 ---
 
 ### **STEP 4: Pricing Page**
-**URL:** https://tech-excellence-8.preview.emergentagent.com/pricing
+**URL:** https://learn-unplugged-1.preview.emergentagent.com/pricing
 
 **3 Subscription Plans:**
 
@@ -133,7 +133,7 @@
 ---
 
 ### **STEP 6: Subscription Success Page**
-**URL:** https://tech-excellence-8.preview.emergentagent.com/subscription-success?session_id=xxx
+**URL:** https://learn-unplugged-1.preview.emergentagent.com/subscription-success?session_id=xxx
 
 **What Student Sees:**
 - ⏳ "Activating Subscription..." (2 seconds)
@@ -147,7 +147,7 @@
 ---
 
 ### **STEP 7: Dashboard After Payment**
-**URL:** https://tech-excellence-8.preview.emergentagent.com/dashboard
+**URL:** https://learn-unplugged-1.preview.emergentagent.com/dashboard
 
 **Now Student Has:**
 - ✅ Access to ALL 38 activities (23 free + 15 premium)
@@ -306,7 +306,7 @@ Student tries to view premium activity:
 
 ### **Test Registration:**
 ```
-1. Go to: https://tech-excellence-8.preview.emergentagent.com/register
+1. Go to: https://learn-unplugged-1.preview.emergentagent.com/register
 2. Fill form:
    - Name: Test Student
    - Role: Student

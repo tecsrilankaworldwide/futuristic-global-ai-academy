@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 class UnpluggedAPITester:
-    def __init__(self, base_url: str = "https://tech-excellence-8.preview.emergentagent.com/api"):
+    def __init__(self, base_url: str = "https://learn-unplugged-1.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.tokens = {}  # Store tokens for different users
         self.test_data = {}  # Store test data created during tests
