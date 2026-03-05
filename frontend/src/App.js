@@ -555,11 +555,12 @@ const ActivityDetail = () => {
 
   useEffect(() => {
     fetchActivity();
-  }, [id]);
+  }, [id, i18n.language]); // Refetch when language changes
 
   const fetchActivity = async () => {
     try {
-      const { data } = await axios.get(`${API}/activities/${id}`);
+      // Fetch with language parameter for translation
+      const { data } = await axios.get(`${API}/activities/${id}?lang=${i18n.language}`);
       setActivity(data);
     } catch (error) {
       toast.error('Activity not found');
@@ -608,11 +609,6 @@ const ActivityDetail = () => {
                 <h3 className="text-xl font-semibold">📋 {t('activity.instructions')}</h3>
                 <VoicePlayer text={activity.instructions.join('. ')} />
               </div>
-              {i18n.language !== 'en' && (
-                <p className="text-sm text-muted-foreground mb-3 italic">
-                  🎧 Audio plays in {LANGUAGES.find(l => l.code === i18n.language)?.name} first, then English
-                </p>
-              )}
               <ol className="space-y-2">
                 {activity.instructions.map((instruction, index) => (
                   <li key={index} className="flex gap-3">

@@ -43,38 +43,20 @@ export default function VoicePlayer({ text, className }) {
 
     setSpeaking(true);
 
-    // First: Speak in selected language
+    // Speak ONLY in selected language
     const selectedLang = VOICE_MAPPINGS[i18n.language] || 'en-US';
-    const utterance1 = new SpeechSynthesisUtterance(text);
-    utterance1.lang = selectedLang;
-    utterance1.rate = 0.85;
-    utterance1.pitch = 1.0;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = selectedLang;
+    utterance.rate = 0.85;
+    utterance.pitch = 1.0;
 
-    utterance1.onend = () => {
-      // Small pause, then speak in English
-      setTimeout(() => {
-        if (selectedLang !== 'en-US' && selectedLang !== 'en-GB') {
-          const utterance2 = new SpeechSynthesisUtterance(text);
-          utterance2.lang = 'en-US';
-          utterance2.rate = 0.85;
-          utterance2.pitch = 1.0;
-
-          utterance2.onend = () => setSpeaking(false);
-          utterance2.onerror = () => setSpeaking(false);
-
-          window.speechSynthesis.speak(utterance2);
-        } else {
-          setSpeaking(false);
-        }
-      }, 800); // 800ms pause between languages
-    };
-
-    utterance1.onerror = () => {
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => {
       setSpeaking(false);
       console.error('Speech synthesis error');
     };
 
-    window.speechSynthesis.speak(utterance1);
+    window.speechSynthesis.speak(utterance);
   };
 
   if (!supported) return null;
@@ -95,7 +77,7 @@ export default function VoicePlayer({ text, className }) {
       ) : (
         <>
           <Volume2 className="h-4 w-4 mr-2" />
-          🔊 Listen ({i18n.language === 'en' ? 'English' : 'Bilingual'})
+          🔊 Listen
         </>
       )}
     </Button>

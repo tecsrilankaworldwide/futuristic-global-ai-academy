@@ -17,6 +17,7 @@ from passlib.context import CryptContext
 import aiofiles
 from enum import Enum
 from io import BytesIO
+from googletrans import Translator
 
 # PDF Generation
 from weasyprint import HTML
@@ -47,6 +48,26 @@ security = HTTPBearer()
 
 # Stripe configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+
+# Translation instance
+translator = Translator()
+
+# Language code mapping for Google Translate
+LANG_CODES = {
+    'en': 'en',
+    'ta': 'ta',
+    'si': 'si',
+    'hi': 'hi',
+    'ms': 'ms',
+    'tl': 'tl',
+    'zh': 'zh-cn',
+    'th': 'th',
+    'ur': 'ur',
+    'bn': 'bn',
+    'zh-TW': 'zh-tw',
+    'ko': 'ko',
+    'ja': 'ja'
+}
 
 # Create the main app
 app = FastAPI(title="Unplugged AI Academy")
@@ -464,10 +485,42 @@ async def get_activities(
     return activities
 
 @api_router.get("/activities/{activity_id}")
-async def get_activity(activity_id: str):
+async def get_activity(activity_id: str, lang: Optional[str] = None):
     activity = await db.activities.find_one({"id": activity_id}, {"_id": 0})
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
+    
+    # Translate if language specified and not English
+    if lang and lang != 'en' and lang in LANG_CODES:
+        try:
+            target_lang = LANG_CODES[lang]
+            
+            # Translate title and description
+            if activity.get('title'):
+                activity['title'] = translator.translate(activity['title'], dest=target_lang).text
+            if activity.get('description'):
+                activity['description'] = translator.translate(activity['description'], dest=target_lang).text
+            
+            # Translate instructions
+            if activity.get('instructions'):
+                translated_instructions = []
+                for instruction in activity['instructions']:
+                    translated = translator.translate(instruction, dest=target_lang).text
+                    translated_instructions.append(translated)
+                activity['instructions'] = translated_instructions
+            
+            # Translate learning objectives
+            if activity.get('learning_objectives'):
+                translated_objectives = []
+                for objective in activity['learning_objectives']:
+                    translated = translator.translate(objective, dest=target_lang).text
+                    translated_objectives.append(translated)
+                activity['learning_objectives'] = translated_objectives
+                
+        except Exception as e:
+            logging.error(f"Translation error: {e}")
+            # Return original if translation fails
+    
     return activity
 
 @api_router.post("/activities", response_model=Activity)
