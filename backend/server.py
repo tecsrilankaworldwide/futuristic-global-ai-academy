@@ -49,6 +49,22 @@ security = HTTPBearer()
 # Stripe configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
 
+# PayPal configuration
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
+PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', '')
+PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')
+
+# PayPal SDK setup
+from paypalcheckoutsdk.core import PayPalHttpClient, SandboxEnvironment, LiveEnvironment
+from paypalcheckoutsdk.orders import OrdersCreateRequest, OrdersCaptureRequest
+
+def get_paypal_client():
+    if PAYPAL_MODE == 'live':
+        environment = LiveEnvironment(client_id=PAYPAL_CLIENT_ID, client_secret=PAYPAL_SECRET)
+    else:
+        environment = SandboxEnvironment(client_id=PAYPAL_CLIENT_ID, client_secret=PAYPAL_SECRET)
+    return PayPalHttpClient(environment)
+
 # Translation instance
 translator = Translator()
 
@@ -858,41 +874,136 @@ async def paypal_checkout(
     
     plan = PRICING_PLANS[plan_id]
     
-    # Store pending transaction
-    transaction = {
-        "id": str(uuid.uuid4()),
-        "user_id": current_user.id,
-        "user_email": current_user.email,
-        "plan_id": plan_id,
-        "amount": plan["price"],
-        "currency": plan["currency"],
-        "payment_method": "paypal",
-        "status": "initiated",
-        "payment_status": "pending",
-        "created_at": datetime.now(timezone.utc),
-        "metadata": {
-            "user_id": current_user.id,
-            "plan_id": plan_id,
-            "user_email": current_user.email
-        }
-    }
-    await db.payment_transactions.insert_one(transaction)
+    if not PAYPAL_CLIENT_ID or not PAYPAL_SECRET:
+        raise HTTPException(status_code=500, detail="PayPal is not configured")
     
-    # PayPal integration - return approval URL if configured
-    # For now, return a message indicating PayPal needs to be configured with merchant credentials
-    paypal_client_id = os.environ.get("PAYPAL_CLIENT_ID", "")
-    if not paypal_client_id:
+    # Get host URL for return/cancel
+    host_url = str(request.base_url).rstrip("/")
+    
+    # Convert LKR to USD for PayPal (approximate rate for sandbox)
+    # LKR to USD approximate: 1 USD ~ 300 LKR
+    usd_amount = round(plan["price"] / 300, 2)
+    if usd_amount < 1:
+        usd_amount = 1.00
+    
+    # Create PayPal order
+    try:
+        paypal_client = get_paypal_client()
+        order_request = OrdersCreateRequest()
+        order_request.prefer('return=representation')
+        order_request.request_body({
+            "intent": "CAPTURE",
+            "purchase_units": [{
+                "reference_id": plan_id,
+                "description": plan["name"],
+                "amount": {
+                    "currency_code": "USD",
+                    "value": str(usd_amount)
+                },
+                "custom_id": current_user.id
+            }],
+            "application_context": {
+                "brand_name": "Futuristic Global AI Academy",
+                "landing_page": "LOGIN",
+                "user_action": "PAY_NOW",
+                "return_url": f"{host_url}/subscription-success?provider=paypal",
+                "cancel_url": f"{host_url}/pricing"
+            }
+        })
+        
+        response = paypal_client.execute(order_request)
+        order = response.result
+        
+        # Find approval URL
+        approval_url = None
+        for link in order.links:
+            if link.rel == "approve":
+                approval_url = link.href
+                break
+        
+        # Store transaction
+        transaction = {
+            "id": str(uuid.uuid4()),
+            "paypal_order_id": order.id,
+            "user_id": current_user.id,
+            "user_email": current_user.email,
+            "plan_id": plan_id,
+            "amount": plan["price"],
+            "usd_amount": usd_amount,
+            "currency": plan["currency"],
+            "payment_method": "paypal",
+            "status": "initiated",
+            "payment_status": "pending",
+            "created_at": datetime.now(timezone.utc),
+            "metadata": {
+                "user_id": current_user.id,
+                "plan_id": plan_id,
+                "user_email": current_user.email
+            }
+        }
+        await db.payment_transactions.insert_one(transaction)
+        
         return {
-            "approval_url": None,
-            "message": "PayPal is being configured. Please use QR Code or Card payment.",
+            "approval_url": approval_url,
+            "order_id": order.id,
             "transaction_id": transaction["id"]
         }
-    
-    return {
-        "approval_url": None,
-        "message": "PayPal checkout initiated",
-        "transaction_id": transaction["id"]
-    }
+        
+    except Exception as e:
+        logging.error(f"PayPal order creation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create PayPal order: {str(e)}")
+
+@api_router.post("/subscriptions/paypal-capture/{order_id}")
+async def capture_paypal_order(
+    order_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Capture a PayPal order after user approves payment"""
+    try:
+        paypal_client = get_paypal_client()
+        capture_request = OrdersCaptureRequest(order_id)
+        response = paypal_client.execute(capture_request)
+        order = response.result
+        
+        if order.status == "COMPLETED":
+            # Update transaction
+            transaction = await db.payment_transactions.find_one({"paypal_order_id": order_id})
+            if transaction:
+                await db.payment_transactions.update_one(
+                    {"paypal_order_id": order_id},
+                    {"$set": {
+                        "status": "completed",
+                        "payment_status": "paid",
+                        "completed_at": datetime.now(timezone.utc)
+                    }}
+                )
+                
+                # Activate subscription
+                plan_id = transaction["metadata"]["plan_id"]
+                user_id = transaction["metadata"]["user_id"]
+                plan = PRICING_PLANS[plan_id]
+                expires_at = datetime.now(timezone.utc) + timedelta(days=plan["duration_days"])
+                
+                await db.subscriptions.update_one(
+                    {"user_id": user_id},
+                    {"$set": {
+                        "user_id": user_id,
+                        "plan_id": plan_id,
+                        "status": "active",
+                        "payment_method": "paypal",
+                        "started_at": datetime.now(timezone.utc),
+                        "expires_at": expires_at
+                    }},
+                    upsert=True
+                )
+            
+            return {"status": "completed", "message": "Payment successful! Subscription activated."}
+        else:
+            return {"status": order.status, "message": "Payment not completed"}
+            
+    except Exception as e:
+        logging.error(f"PayPal capture error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to capture payment: {str(e)}")
 
 # Certificate Routes
 @api_router.post("/certificates/generate")

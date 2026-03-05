@@ -973,16 +973,28 @@ const PricingPage = () => {
 const SubscriptionSuccess = () => {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkStatus = async () => {
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get('session_id');
+      const provider = params.get('provider');
+      const paypalToken = params.get('token');
 
-      if (sessionId) {
+      if (provider === 'paypal' && paypalToken) {
+        // PayPal return - capture the order
+        try {
+          await axios.post(`${API}/subscriptions/paypal-capture/${paypalToken}`);
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        } catch (error) {
+          console.error('PayPal capture error:', error);
+        }
+      } else if (sessionId) {
+        // Stripe return
         try {
           await axios.get(`${API}/subscriptions/status/${sessionId}`);
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for webhook
+          await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (error) {
           console.error('Status check error:', error);
         }
