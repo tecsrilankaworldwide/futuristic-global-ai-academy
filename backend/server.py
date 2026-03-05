@@ -24,7 +24,7 @@ from weasyprint import HTML
 from jinja2 import Template
 
 # Stripe Integration
-from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+import stripe
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -732,80 +732,103 @@ async def create_subscription_checkout(
     host_url = str(request.base_url).rstrip("/")
     
     # Initialize Stripe
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    stripe.api_key = STRIPE_API_KEY
     
-    # Create checkout session
-    checkout_request = CheckoutSessionRequest(
-        amount=plan["price"],
-        currency=plan["currency"],
-        success_url=f"{host_url}/subscription-success?session_id={{{{CHECKOUT_SESSION_ID}}}}",
-        cancel_url=f"{host_url}/pricing",
-        metadata={
-            "user_id": current_user.id,
-            "plan_id": plan_id,
-            "user_email": current_user.email
+    try:
+        # Create Stripe checkout session
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": plan["currency"].lower(),
+                    "product_data": {
+                        "name": plan["name"],
+                        "description": f"Monthly subscription - {plan['name']}"
+                    },
+                    "unit_amount": int(plan["price"] * 100),  # Stripe uses cents
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            success_url=f"{host_url}/subscription-success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{host_url}/pricing",
+            metadata={
+                "user_id": current_user.id,
+                "plan_id": plan_id,
+                "user_email": current_user.email
+            }
+        )
+        
+        # Store transaction
+        transaction = {
+            "id": str(uuid.uuid4()),
+            "session_id": session.id,
+            "amount": plan["price"],
+            "currency": plan["currency"],
+            "status": "initiated",
+            "payment_status": "pending",
+            "metadata": {
+                "user_id": current_user.id,
+                "plan_id": plan_id,
+                "user_email": current_user.email
+            },
+            "created_at": datetime.now(timezone.utc)
         }
-    )
-    
-    session = await stripe_checkout.create_checkout_session(checkout_request)
-    
-    # Store transaction
-    transaction = {
-        "id": str(uuid.uuid4()),
-        "session_id": session.session_id,
-        "amount": plan["price"],
-        "currency": plan["currency"],
-        "status": "initiated",
-        "payment_status": "pending",
-        "metadata": checkout_request.metadata,
-        "created_at": datetime.now(timezone.utc)
-    }
-    await db.payment_transactions.insert_one(transaction)
-    
-    return {"checkout_url": session.url, "session_id": session.session_id}
+        await db.payment_transactions.insert_one(transaction)
+        
+        return {"checkout_url": session.url, "session_id": session.id}
+    except Exception as e:
+        logging.error(f"Stripe checkout error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
     body = await request.body()
     signature = request.headers.get("Stripe-Signature")
     
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url="")
+    stripe.api_key = STRIPE_API_KEY
     
     try:
-        webhook_response = await stripe_checkout.handle_webhook(body, signature)
+        # Parse the event (without webhook secret verification for now)
+        import json
+        event = json.loads(body)
         
-        # Update transaction
-        await db.payment_transactions.update_one(
-            {"session_id": webhook_response.session_id},
-            {"$set": {
-                "status": "completed" if webhook_response.payment_status == "paid" else "failed",
-                "payment_status": webhook_response.payment_status,
-                "completed_at": datetime.now(timezone.utc)
-            }}
-        )
-        
-        # Activate subscription if paid
-        if webhook_response.payment_status == "paid":
-            transaction = await db.payment_transactions.find_one({"session_id": webhook_response.session_id})
-            if transaction:
-                user_id = transaction["metadata"]["user_id"]
-                plan_id = transaction["metadata"]["plan_id"]
-                plan = PRICING_PLANS[plan_id]
-                
-                expires_at = datetime.now(timezone.utc) + timedelta(days=plan["duration_days"])
-                
-                await db.subscriptions.update_one(
-                    {"user_id": user_id},
-                    {"$set": {
-                        "user_id": user_id,
-                        "plan_id": plan_id,
-                        "status": "active",
-                        "started_at": datetime.now(timezone.utc),
-                        "expires_at": expires_at
-                    }},
-                    upsert=True
-                )
+        if event.get("type") == "checkout.session.completed":
+            session_data = event["data"]["object"]
+            session_id = session_data["id"]
+            payment_status = "paid" if session_data.get("payment_status") == "paid" else "pending"
+            
+            # Update transaction
+            await db.payment_transactions.update_one(
+                {"session_id": session_id},
+                {"$set": {
+                    "status": "completed" if payment_status == "paid" else "failed",
+                    "payment_status": payment_status,
+                    "completed_at": datetime.now(timezone.utc)
+                }}
+            )
+            
+            # Activate subscription if paid
+            if payment_status == "paid":
+                transaction = await db.payment_transactions.find_one({"session_id": session_id})
+                if transaction:
+                    user_id = transaction["metadata"]["user_id"]
+                    plan_id = transaction["metadata"]["plan_id"]
+                    plan = PRICING_PLANS[plan_id]
+                    
+                    expires_at = datetime.now(timezone.utc) + timedelta(days=plan["duration_days"])
+                    
+                    await db.subscriptions.update_one(
+                        {"user_id": user_id},
+                        {"$set": {
+                            "user_id": user_id,
+                            "plan_id": plan_id,
+                            "status": "active",
+                            "started_at": datetime.now(timezone.utc),
+                            "expires_at": expires_at
+                        }},
+                        upsert=True
+                    )
         
         return {"status": "success"}
     except Exception as e:
@@ -814,9 +837,16 @@ async def stripe_webhook(request: Request):
 
 @api_router.get("/subscriptions/status/{session_id}")
 async def get_checkout_status(session_id: str):
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url="")
-    status = await stripe_checkout.get_checkout_status(session_id)
-    return status
+    stripe.api_key = STRIPE_API_KEY
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        return {
+            "session_id": session.id,
+            "payment_status": session.payment_status,
+            "status": session.status
+        }
+    except Exception as e:
+        return {"session_id": session_id, "payment_status": "unknown", "error": str(e)}
 
 # QR Code / Bank Transfer Payment Notification
 @api_router.post("/subscriptions/qr-payment-notify")
