@@ -180,24 +180,24 @@ const LandingPage = () => {
       {/* Pricing Section */}
       <div className="py-20 px-4 bg-white" id="pricing">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12">Simple Pricing</h2>
+          <h2 className="text-4xl font-bold text-center mb-12">{t('pricing.simple')}</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { name: 'Foundation', age: '5-8 years', price: '1200', color: 'coral' },
-              { name: 'Development', age: '9-12 years', price: '1800', color: 'sunshine' },
-              { name: 'Mastery', age: '13-16 years', price: '2800', color: 'ocean' }
-            ].map((plan) => (
-              <Card key={plan.name} className="card-shadow">
+              { name: t('pricing.foundation'), age: '5-8 years', price: '1200', color: 'coral' },
+              { name: t('pricing.development'), age: '9-12 years', price: '1800', color: 'sunshine' },
+              { name: t('pricing.mastery'), age: '13-16 years', price: '2800', color: 'ocean' }
+            ].map((plan, idx) => (
+              <Card key={idx} className="card-shadow">
                 <CardHeader>
                   <Badge className="w-fit mb-2">{plan.age}</Badge>
-                  <CardTitle>{plan.name} Level</CardTitle>
+                  <CardTitle>{plan.name}</CardTitle>
                   <CardDescription className="text-3xl font-bold text-primary mt-2">
                     LKR {plan.price}/mo
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button className="w-full button-hover" onClick={() => navigate('/register')}>
-                    Get Started
+                    {t('pricing.getstarted')}
                   </Button>
                 </CardContent>
               </Card>
