@@ -802,6 +802,98 @@ async def get_checkout_status(session_id: str):
     status = await stripe_checkout.get_checkout_status(session_id)
     return status
 
+# QR Code / Bank Transfer Payment Notification
+@api_router.post("/subscriptions/qr-payment-notify")
+async def qr_payment_notify(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    body = await request.json()
+    plan_id = body.get("plan_id")
+    payment_method = body.get("payment_method", "qr_bank_transfer")
+    
+    if plan_id not in PRICING_PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    
+    plan = PRICING_PLANS[plan_id]
+    
+    # Store pending payment for manual verification
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user.id,
+        "user_email": current_user.email,
+        "plan_id": plan_id,
+        "amount": plan["price"],
+        "currency": plan["currency"],
+        "payment_method": payment_method,
+        "status": "pending_verification",
+        "payment_status": "awaiting_verification",
+        "created_at": datetime.now(timezone.utc),
+        "metadata": {
+            "user_id": current_user.id,
+            "plan_id": plan_id,
+            "user_email": current_user.email,
+            "payment_method": payment_method
+        }
+    }
+    await db.payment_transactions.insert_one(transaction)
+    
+    return {
+        "status": "pending_verification",
+        "message": "Payment notification received. Your subscription will be activated after verification.",
+        "transaction_id": transaction["id"]
+    }
+
+# PayPal Checkout (placeholder - configurable with PayPal merchant details)
+@api_router.post("/subscriptions/paypal-checkout")
+async def paypal_checkout(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    body = await request.json()
+    plan_id = body.get("plan_id")
+    
+    if plan_id not in PRICING_PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    
+    plan = PRICING_PLANS[plan_id]
+    
+    # Store pending transaction
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user.id,
+        "user_email": current_user.email,
+        "plan_id": plan_id,
+        "amount": plan["price"],
+        "currency": plan["currency"],
+        "payment_method": "paypal",
+        "status": "initiated",
+        "payment_status": "pending",
+        "created_at": datetime.now(timezone.utc),
+        "metadata": {
+            "user_id": current_user.id,
+            "plan_id": plan_id,
+            "user_email": current_user.email
+        }
+    }
+    await db.payment_transactions.insert_one(transaction)
+    
+    # PayPal integration - return approval URL if configured
+    # For now, return a message indicating PayPal needs to be configured with merchant credentials
+    paypal_client_id = os.environ.get("PAYPAL_CLIENT_ID", "")
+    if not paypal_client_id:
+        return {
+            "approval_url": None,
+            "message": "PayPal is being configured. Please use QR Code or Card payment.",
+            "transaction_id": transaction["id"]
+        }
+    
+    return {
+        "approval_url": None,
+        "message": "PayPal checkout initiated",
+        "transaction_id": transaction["id"]
+    }
+
 # Certificate Routes
 @api_router.post("/certificates/generate")
 async def generate_certificate(current_user: User = Depends(get_current_student)):

@@ -15,7 +15,8 @@ import { useAuth } from './hooks/useAuth';
 import { 
   Sparkles, Trophy, BookOpen, Users, Settings, LogOut, Menu, X,
   ArrowRight, CheckCircle, Clock, Star, Brain, Cpu, Database,
-  Play, Award, TrendingUp, User, Home, Plus, Upload, Check, Volume2, ArrowLeft
+  Play, Award, TrendingUp, User, Home, Plus, Upload, Check, Volume2, ArrowLeft,
+  CreditCard, QrCode, Wallet, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // Components
@@ -37,6 +38,7 @@ import { Progress } from './components/ui/progress';
 import { Avatar, AvatarFallback } from './components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './components/ui/dialog';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -541,6 +543,9 @@ const PricingPage = () => {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [qrPage, setQrPage] = useState(1);
 
   const plans = [
     {
@@ -566,23 +571,64 @@ const PricingPage = () => {
     }
   ];
 
-  const handleSubscribe = async (planId) => {
+  const handleSelectPlan = (planId) => {
     if (!user) {
       navigate('/login');
       return;
     }
-
     setSelectedPlan(planId);
-    setLoading(true);
+    setPaymentMethod(null);
+    setQrPage(1);
+    setShowPaymentDialog(true);
+  };
 
+  const handleStripeCheckout = async () => {
+    setLoading(true);
     try {
-      const { data } = await axios.post(`${API}/subscriptions/checkout?plan_id=${planId}`);
-      window.location.href = data.checkout_url; // Redirect to Stripe
+      const { data } = await axios.post(`${API}/subscriptions/checkout?plan_id=${selectedPlan}`);
+      window.location.href = data.checkout_url;
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to start checkout');
       setLoading(false);
     }
   };
+
+  const handlePayPalCheckout = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.post(`${API}/subscriptions/paypal-checkout`, {
+        plan_id: selectedPlan
+      });
+      if (data.approval_url) {
+        window.location.href = data.approval_url;
+      } else {
+        toast.error('PayPal checkout is being configured. Please try QR Code or Card payment.');
+        setLoading(false);
+      }
+    } catch (error) {
+      toast.error('PayPal checkout is being configured. Please try QR Code or Card payment.');
+      setLoading(false);
+    }
+  };
+
+  const handleQrPaymentDone = async () => {
+    if (!user || !selectedPlan) return;
+    setLoading(true);
+    try {
+      await axios.post(`${API}/subscriptions/qr-payment-notify`, {
+        plan_id: selectedPlan,
+        payment_method: 'qr_bank_transfer'
+      });
+      toast.success('Payment notification sent! Your subscription will be activated after verification.');
+      setShowPaymentDialog(false);
+      setLoading(false);
+    } catch (error) {
+      toast.error('Failed to notify. Please contact support.');
+      setLoading(false);
+    }
+  };
+
+  const selectedPlanDetails = plans.find(p => p.id === selectedPlan);
 
   return (
     <div className="min-h-screen bg-background">
@@ -590,7 +636,7 @@ const PricingPage = () => {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">Choose Your Plan 💎</h1>
+              <h1 className="text-3xl font-bold" data-testid="pricing-page-title">Choose Your Plan</h1>
               <p className="text-muted-foreground">Unlock all premium activities and features</p>
             </div>
             <div className="flex gap-2">
@@ -626,21 +672,43 @@ const PricingPage = () => {
                 </ul>
                 <Button 
                   className="w-full button-hover" 
-                  onClick={() => handleSubscribe(plan.id)}
-                  disabled={loading && selectedPlan === plan.id}
+                  onClick={() => handleSelectPlan(plan.id)}
                   data-testid={`subscribe-${plan.id}-button`}
                 >
-                  {loading && selectedPlan === plan.id ? 'Processing...' : 'Subscribe Now'}
+                  Subscribe Now
                 </Button>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        {/* Payment Methods Overview */}
+        <div className="mt-12">
+          <Card className="max-w-3xl mx-auto">
+            <CardContent className="pt-6">
+              <h3 className="text-xl font-semibold mb-4 text-center">Available Payment Methods</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-muted/30">
+                  <QrCode className="h-8 w-8 text-primary" />
+                  <span className="text-sm font-medium text-center">Bank Transfer (QR)</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-muted/30">
+                  <CreditCard className="h-8 w-8 text-primary" />
+                  <span className="text-sm font-medium text-center">Card Payment</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-muted/30">
+                  <Wallet className="h-8 w-8 text-primary" />
+                  <span className="text-sm font-medium text-center">PayPal</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6">
-              <h3 className="text-xl font-semibold mb-3">✨ What's Included in Premium?</h3>
+              <h3 className="text-xl font-semibold mb-3">What's Included in Premium?</h3>
               <div className="grid md:grid-cols-2 gap-4 text-left">
                 <div className="flex items-start gap-2">
                   <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
@@ -675,6 +743,228 @@ const PricingPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Payment Method Selection Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle data-testid="payment-dialog-title">
+              {paymentMethod ? (
+                <button 
+                  onClick={() => setPaymentMethod(null)} 
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-1"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Back to payment methods
+                </button>
+              ) : null}
+              {!paymentMethod && 'Select Payment Method'}
+              {paymentMethod === 'qr' && 'Bank Transfer via QR Code'}
+              {paymentMethod === 'card' && 'Card Payment'}
+              {paymentMethod === 'paypal' && 'PayPal Payment'}
+            </DialogTitle>
+            {selectedPlanDetails && !paymentMethod && (
+              <DialogDescription>
+                <span className="font-semibold text-foreground">{selectedPlanDetails.name}</span> — LKR {selectedPlanDetails.price}/month
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          {/* Payment Method Selection */}
+          {!paymentMethod && (
+            <div className="space-y-3 mt-2">
+              <button
+                onClick={() => setPaymentMethod('qr')}
+                className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                data-testid="payment-method-qr"
+              >
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <QrCode className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold">Bank Transfer (QR Code)</p>
+                  <p className="text-sm text-muted-foreground">Scan QR code with your banking app</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto" />
+              </button>
+
+              <button
+                onClick={() => setPaymentMethod('card')}
+                className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                data-testid="payment-method-card"
+              >
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <CreditCard className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold">Card Payment (Visa / MasterCard)</p>
+                  <p className="text-sm text-muted-foreground">Pay securely with your credit or debit card</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto" />
+              </button>
+
+              <button
+                onClick={() => setPaymentMethod('paypal')}
+                className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-muted hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                data-testid="payment-method-paypal"
+              >
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <Wallet className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold">PayPal</p>
+                  <p className="text-sm text-muted-foreground">Pay with your PayPal account or card via PayPal</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto" />
+              </button>
+            </div>
+          )}
+
+          {/* QR Code Payment View */}
+          {paymentMethod === 'qr' && (
+            <div className="space-y-4 mt-2">
+              {selectedPlanDetails && (
+                <div className="bg-primary/5 rounded-lg p-3 text-center">
+                  <p className="text-sm text-muted-foreground">Amount to pay</p>
+                  <p className="text-2xl font-bold text-primary">LKR {selectedPlanDetails.price}</p>
+                  <p className="text-xs text-muted-foreground">{selectedPlanDetails.name} — Monthly</p>
+                </div>
+              )}
+              
+              <div className="bg-white rounded-lg border p-4">
+                <p className="text-sm font-medium text-center mb-2 text-muted-foreground">
+                  TEC SRI LANKA WORLD WIDE
+                </p>
+                <p className="text-xs text-center mb-3 text-muted-foreground">
+                  Account: 005000189991653
+                </p>
+                <div className="flex justify-center items-center relative">
+                  <img 
+                    src={`/qr_code_page_${qrPage}.png`} 
+                    alt="Payment QR Code" 
+                    className="max-w-[280px] w-full h-auto rounded-md"
+                    data-testid="qr-code-image"
+                  />
+                </div>
+                <div className="flex justify-center items-center gap-4 mt-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setQrPage(1)}
+                    className={qrPage === 1 ? 'border-primary bg-primary/10' : ''}
+                  >
+                    QR 1
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setQrPage(2)}
+                    className={qrPage === 2 ? 'border-primary bg-primary/10' : ''}
+                  >
+                    QR 2
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+                <p className="font-medium">Instructions:</p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Open your banking app</li>
+                  <li>Scan the QR code above</li>
+                  <li>Verify the amount: <span className="font-semibold text-foreground">LKR {selectedPlanDetails?.price}</span></li>
+                  <li>Complete the transfer</li>
+                  <li>Click "I've Made the Payment" below</li>
+                </ol>
+              </div>
+
+              <Button 
+                className="w-full" 
+                onClick={handleQrPaymentDone}
+                disabled={loading}
+                data-testid="qr-payment-done-button"
+              >
+                {loading ? 'Notifying...' : "I've Made the Payment"}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Your subscription will be activated within 24 hours after payment verification.
+              </p>
+            </div>
+          )}
+
+          {/* Card Payment View */}
+          {paymentMethod === 'card' && (
+            <div className="space-y-4 mt-2">
+              {selectedPlanDetails && (
+                <div className="bg-primary/5 rounded-lg p-3 text-center">
+                  <p className="text-sm text-muted-foreground">Amount to pay</p>
+                  <p className="text-2xl font-bold text-primary">LKR {selectedPlanDetails.price}</p>
+                  <p className="text-xs text-muted-foreground">{selectedPlanDetails.name} — Monthly</p>
+                </div>
+              )}
+              <div className="text-center space-y-3">
+                <div className="flex justify-center gap-3">
+                  <div className="bg-muted/50 rounded-md px-3 py-2 text-xs font-medium">VISA</div>
+                  <div className="bg-muted/50 rounded-md px-3 py-2 text-xs font-medium">MasterCard</div>
+                  <div className="bg-muted/50 rounded-md px-3 py-2 text-xs font-medium">AMEX</div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  You'll be redirected to our secure payment processor (Stripe) to complete your payment.
+                </p>
+              </div>
+              <Button 
+                className="w-full" 
+                onClick={handleStripeCheckout}
+                disabled={loading}
+                data-testid="card-payment-button"
+              >
+                {loading ? 'Redirecting...' : (
+                  <>
+                    <CreditCard className="mr-2 h-4 w-4" /> Pay with Card — LKR {selectedPlanDetails?.price}
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Secure payment powered by Stripe. Your card details are never stored on our servers.
+              </p>
+            </div>
+          )}
+
+          {/* PayPal Payment View */}
+          {paymentMethod === 'paypal' && (
+            <div className="space-y-4 mt-2">
+              {selectedPlanDetails && (
+                <div className="bg-primary/5 rounded-lg p-3 text-center">
+                  <p className="text-sm text-muted-foreground">Amount to pay</p>
+                  <p className="text-2xl font-bold text-primary">LKR {selectedPlanDetails.price}</p>
+                  <p className="text-xs text-muted-foreground">{selectedPlanDetails.name} — Monthly</p>
+                </div>
+              )}
+              <div className="text-center space-y-3">
+                <div className="h-12 w-12 rounded-full bg-[#0070ba]/10 flex items-center justify-center mx-auto">
+                  <Wallet className="h-6 w-6 text-[#0070ba]" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Pay securely using your PayPal account or any card through PayPal.
+                </p>
+              </div>
+              <Button 
+                className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white" 
+                onClick={handlePayPalCheckout}
+                disabled={loading}
+                data-testid="paypal-payment-button"
+              >
+                {loading ? 'Redirecting to PayPal...' : (
+                  <>
+                    <Wallet className="mr-2 h-4 w-4" /> Pay with PayPal — LKR {selectedPlanDetails?.price}
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                You'll be redirected to PayPal to complete your payment securely.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
