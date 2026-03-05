@@ -111,13 +111,16 @@ const LandingPage = () => {
             transition={{ duration: 0.6 }}
           >
             <div className="mb-6 text-6xl">🚀</div>
-            <h1 className="text-5xl md:text-7xl font-bold text-primary mb-6">
+            <h1 className="text-5xl md:text-7xl font-bold text-primary mb-4">
               {t('hero.title')}
             </h1>
-            <p className="text-lg md:text-xl font-semibold text-primary/80 mb-4">
+            <p className="text-lg md:text-xl font-semibold text-primary/80 mb-2">
               Future Leaders Meeting Place
             </p>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl font-bold text-secondary-foreground mb-4 flex items-center justify-center gap-2">
+              <span className="text-3xl">🧠</span> Unplugged AI Academy - Compute With Your Brain
+            </p>
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               {t('hero.subtitle')}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
