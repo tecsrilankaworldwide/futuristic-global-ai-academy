@@ -15,7 +15,7 @@ import { useAuth } from './hooks/useAuth';
 import { 
   Sparkles, Trophy, BookOpen, Users, Settings, LogOut, Menu, X,
   ArrowRight, CheckCircle, Clock, Star, Brain, Cpu, Database,
-  Play, Award, TrendingUp, User, Home, Plus, Upload, Check, Volume2
+  Play, Award, TrendingUp, User, Home, Plus, Upload, Check, Volume2, ArrowLeft
 } from 'lucide-react';
 
 // Components
@@ -528,6 +528,203 @@ const StudentDashboard = () => {
   );
 };
 
+// Pricing Page
+const PricingPage = () => {
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const plans = [
+    {
+      id: 'foundation_monthly',
+      name: 'Foundation Level',
+      age: '5-8 years',
+      price: '1,200',
+      features: ['AI Basics', 'Simple Logic', 'Creative Play', 'Progress Tracking', 'Certificates', 'All Premium Activities']
+    },
+    {
+      id: 'development_monthly',
+      name: 'Development Level',
+      age: '9-12 years',
+      price: '1,800',
+      features: ['Logical Reasoning', 'AI Applications', 'Design Thinking', 'Complex Problems', 'Certificates', 'All Premium Activities']
+    },
+    {
+      id: 'mastery_monthly',
+      name: 'Mastery Level',
+      age: '13-16 years',
+      price: '2,800',
+      features: ['Advanced AI', 'Innovation Methods', 'Leadership Skills', 'Career Guidance', 'Certificates', 'All Premium Activities']
+    }
+  ];
+
+  const handleSubscribe = async (planId) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setSelectedPlan(planId);
+    setLoading(true);
+
+    try {
+      const { data } = await axios.post(`${API}/subscriptions/checkout?plan_id=${planId}`);
+      window.location.href = data.checkout_url; // Redirect to Stripe
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to start checkout');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="dashboard-gradient border-b">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">Choose Your Plan 💎</h1>
+              <p className="text-muted-foreground">Unlock all premium activities and features</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate(user ? '/dashboard' : '/')}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <LanguageSelector />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="grid md:grid-cols-3 gap-8">
+          {plans.map((plan) => (
+            <Card key={plan.id} className="card-shadow relative">
+              <CardHeader>
+                <Badge className="w-fit mb-2">{plan.age}</Badge>
+                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <CardDescription className="text-4xl font-bold text-primary mt-4">
+                  LKR {plan.price}
+                  <span className="text-sm text-muted-foreground">/month</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 mb-6">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full button-hover" 
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={loading && selectedPlan === plan.id}
+                  data-testid={`subscribe-${plan.id}-button`}
+                >
+                  {loading && selectedPlan === plan.id ? 'Processing...' : 'Subscribe Now'}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Card className="max-w-2xl mx-auto">
+            <CardContent className="pt-6">
+              <h3 className="text-xl font-semibold mb-3">✨ What's Included in Premium?</h3>
+              <div className="grid md:grid-cols-2 gap-4 text-left">
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-semibold">15 Premium Activities</p>
+                    <p className="text-sm text-muted-foreground">Advanced concepts and challenges</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-semibold">All 13 Languages</p>
+                    <p className="text-sm text-muted-foreground">Learn in your native language</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Voice Explanations</p>
+                    <p className="text-sm text-muted-foreground">Listen to content in any language</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Certificates</p>
+                    <p className="text-sm text-muted-foreground">Download achievement certificates</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Subscription Success Page
+const SubscriptionSuccess = () => {
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+
+      if (sessionId) {
+        try {
+          await axios.get(`${API}/subscriptions/status/${sessionId}`);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for webhook
+        } catch (error) {
+          console.error('Status check error:', error);
+        }
+      }
+      setChecking(false);
+    };
+
+    checkStatus();
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 px-4">
+      <Card className="max-w-md w-full">
+        <CardContent className="pt-12 pb-8 text-center">
+          {checking ? (
+            <>
+              <div className="text-6xl mb-4 animate-bounce">⏳</div>
+              <h2 className="text-2xl font-bold mb-2">Activating Subscription...</h2>
+              <p className="text-muted-foreground">Please wait while we confirm your payment</p>
+            </>
+          ) : (
+            <>
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-2xl font-bold mb-2 text-primary">Payment Successful!</h2>
+              <p className="text-muted-foreground mb-6">
+                Your premium subscription is now active. You have access to all premium activities!
+              </p>
+              <Button className="w-full" onClick={() => navigate('/dashboard')} data-testid="go-to-dashboard-button">
+                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Import at the top for language names
 const LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -687,6 +884,8 @@ function App() {
           <Route path="/parent" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
           <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/subscription-success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
