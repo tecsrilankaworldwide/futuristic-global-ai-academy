@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: ai-academy-mongo
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+
+  # FastAPI Backend
+  backend:
+    build: ./backend
+    container_name: ai-academy-backend
+    restart: always
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=ai_unplugged_db
+      - CORS_ORIGINS=*
+      - SECRET_KEY=${SECRET_KEY:-unplugged-ai-secret-key-change-in-production-2026}
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_emergent}
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
+      - PAYPAL_SECRET=${PAYPAL_SECRET}
+      - PAYPAL_MODE=${PAYPAL_MODE:-sandbox}
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  # React Frontend (served via Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL:-http://localhost}
+    container_name: ai-academy-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  mongo_data:
+
+networks:
+  app-network:
+    driver: bridge
