@@ -1,26 +1,22 @@
 [
   {
-    "content": "Build Parent Dashboard",
+    "content": "Fix backend: Make weasyprint/jinja2 imports optional in server.py",
     "status": "completed"
   },
   {
-    "content": "Build Teacher Dashboard",
+    "content": "Update requirements.txt with missing packages (weasyprint, jinja2)",
     "status": "completed"
   },
   {
-    "content": "Build Leaderboard",
-    "status": "completed"
+    "content": "Update backend Dockerfile to install weasyprint system dependencies",
+    "status": "in_progress"
   },
   {
-    "content": "Design robotic/space futuristic watermarks for main menus & submenus",
-    "status": "completed"
+    "content": "Push all fixes to GitHub",
+    "status": "pending"
   },
   {
-    "content": "Add cyan blue accent borders to pages",
-    "status": "completed"
-  },
-  {
-    "content": "Push to GitHub: tecsrilankaworldwide/futuristic-global-ai-academy",
-    "status": "completed"
+    "content": "Guide user to pull and rebuild on DigitalOcean",
+    "status": "pending"
   }
 ]
