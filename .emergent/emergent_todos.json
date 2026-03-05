@@ -9,14 +9,14 @@
   },
   {
     "content": "Update backend Dockerfile to install weasyprint system dependencies",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Push all fixes to GitHub",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Guide user to pull and rebuild on DigitalOcean",
-    "status": "pending"
+    "status": "in_progress"
   }
 ]
