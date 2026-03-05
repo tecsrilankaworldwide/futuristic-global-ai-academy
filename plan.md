@@ -12,32 +12,15 @@
 
 ## 2) Implementation Steps
 
-### Phase 1 — Core POC (Isolation): Stripe + Certificates + Activity Completion
+### Phase 1 — Core POC (Isolation): Stripe + Certificates + Activity Completion ✅ COMPLETED
 **Goal:** Prove the failure-prone integrations and core learning loop before building full UX.
 
-**User stories**
-1. As a user, I can start a Stripe checkout for a plan and return to the app successfully.
-2. As the system, I can process Stripe webhooks and activate a subscription reliably.
-3. As a student, I can complete an activity and see progress updated.
-4. As a student, I can generate/download a PDF certificate after meeting completion rules.
-5. As an admin, I can seed the platform with curated unplugged activities.
-
-**Steps**
-- Web search: Stripe best practices for subscriptions/checkout + webhook verification in FastAPI.
-- Backend-only POC scripts:
-  - Minimal endpoints: create-checkout-session, webhook handler, subscription status.
-  - Minimal activity endpoints: seed curated activities, mark complete.
-  - Minimal certificate endpoint: generate PDF for a completion milestone.
-- Run local tests (manual + automated):
-  - Checkout session creation returns URL.
-  - Webhook signature verified; subscription state persisted.
-  - Completion updates progress; certificate PDF downloads.
-- Fix until all POC checks pass.
-
-**Exit criteria**
-- Stripe checkout + webhook flow works end-to-end in test mode.
-- Activity completion updates progress deterministically.
-- PDF generation works and returns valid downloadable file.
+**STATUS:** ✅ ALL TESTS PASSED (5/5)
+- ✅ Stripe checkout session creation
+- ✅ Webhook handling and subscription activation
+- ✅ Activity completion and progress tracking
+- ✅ PDF certificate generation
+- ✅ Database seeding of curated activities
 
 ---
 
@@ -74,9 +57,12 @@
   - Drag/drop sorting (algorithm concept)
   - Pattern recognition / classification quiz
 
-**Checkpoint & Testing (end of Phase 2)**
-- Run one full E2E pass: register → subscribe → unlock premium → complete activities → progress → certificate.
-- Fix UX breaks, API errors, upload issues, and subscription gating.
+**Checkpoint & Testing (end of Phase 2)** - IN PROGRESS
+- ✅ Backend complete with all models and APIs
+- ✅ Frontend complete with child-first design
+- ✅ 18 curated activities seeded (11 free, 7 premium)
+- ⏳ Testing E2E flows now
+- ⏳ Fix issues from testing
 
 ---
 
