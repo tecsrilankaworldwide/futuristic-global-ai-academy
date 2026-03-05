@@ -39,7 +39,7 @@ services:
     build:
       context: ./frontend
       args:
-        REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL:-http://localhost}
+        REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL:-}
     container_name: ai-academy-frontend
     restart: always
     ports:
