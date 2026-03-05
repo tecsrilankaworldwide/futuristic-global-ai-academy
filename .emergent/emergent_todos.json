@@ -4,11 +4,11 @@
     "status": "completed"
   },
   {
-    "content": "Update requirements.txt with missing packages (weasyprint, jinja2)",
+    "content": "Update requirements.txt with missing packages",
     "status": "completed"
   },
   {
-    "content": "Update backend Dockerfile to install weasyprint system dependencies",
+    "content": "Update backend Dockerfile",
     "status": "completed"
   },
   {
@@ -17,6 +17,14 @@
   },
   {
     "content": "Guide user to pull and rebuild on DigitalOcean",
-    "status": "in_progress"
+    "status": "completed"
+  },
+  {
+    "content": "Seed database with activities",
+    "status": "completed"
+  },
+  {
+    "content": "Verify app loads in browser at http://139.59.254.77",
+    "status": "completed"
   }
 ]
