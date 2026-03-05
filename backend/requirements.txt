@@ -13,3 +13,5 @@ stripe
 paypal-checkout-serversdk
 python-dotenv
 PyJWT
+weasyprint
+jinja2

@@ -19,9 +19,14 @@ from enum import Enum
 from io import BytesIO
 from googletrans import Translator
 
-# PDF Generation
-from weasyprint import HTML
-from jinja2 import Template
+# PDF Generation (optional - may not be available in all environments)
+try:
+    from weasyprint import HTML as WeasyHTML
+    from jinja2 import Template
+    WEASYPRINT_AVAILABLE = True
+except ImportError:
+    WEASYPRINT_AVAILABLE = False
+    logging.warning("weasyprint/jinja2 not available - certificate generation will be disabled")
 
 # Stripe Integration
 import stripe
@@ -1038,6 +1043,9 @@ async def capture_paypal_order(
 # Certificate Routes
 @api_router.post("/certificates/generate")
 async def generate_certificate(current_user: User = Depends(get_current_student)):
+    if not WEASYPRINT_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Certificate generation is temporarily unavailable. Please try again later.")
+    
     # Get progress
     progress = await db.progress.find_one({"student_id": current_user.id})
     if not progress or progress.get("activities_completed", 0) < 5:
@@ -1054,7 +1062,7 @@ async def generate_certificate(current_user: User = Depends(get_current_student)
     )
     
     # Convert to PDF
-    pdf_bytes = HTML(string=html_content).write_pdf()
+    pdf_bytes = WeasyHTML(string=html_content).write_pdf()
     
     # Return as download
     return StreamingResponse(
