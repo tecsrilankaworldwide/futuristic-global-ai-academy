@@ -1230,6 +1230,10 @@ async def root():
         "version": "1.0.0"
     }
 
+@api_router.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "Futuristic Global AI Academy API"}
+
 # Include router
 app.include_router(api_router)
 
