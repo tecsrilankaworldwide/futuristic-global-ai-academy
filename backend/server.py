@@ -70,7 +70,7 @@ LANG_CODES = {
 }
 
 # Create the main app
-app = FastAPI(title="Unplugged AI Academy")
+app = FastAPI(title="Futuristic Global AI Academy - Future Leaders Meeting Place")
 
 # Serve uploaded files
 app.mount("/uploads", StaticFiles(directory=str(ROOT_DIR / "uploads")), name="uploads")
@@ -298,7 +298,7 @@ CERTIFICATE_TEMPLATE = """
         <h2>{{ student_name }}</h2>
         <p class="achievement">Has successfully completed</p>
         <p class="achievement"><strong>{{ activities_completed }} Activities</strong></p>
-        <p class="achievement">in AI & Computer Unplugged Learning</p>
+        <p class="achievement">in Futuristic Global AI Academy</p>
         <div class="details">
             <p>Date: {{ completion_date }}</p>
             <p>Level: {{ level }}</p>
@@ -854,7 +854,7 @@ async def get_admin_analytics(current_user: User = Depends(get_current_admin)):
 @api_router.get("/")
 async def root():
     return {
-        "message": "Unplugged AI Academy API",
+        "message": "Futuristic Global AI Academy - Future Leaders Meeting Place",
         "version": "1.0.0"
     }
 

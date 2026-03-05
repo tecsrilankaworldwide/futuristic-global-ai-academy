@@ -110,10 +110,13 @@ const LandingPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="mb-6 text-6xl">🎓</div>
+            <div className="mb-6 text-6xl">🚀</div>
             <h1 className="text-5xl md:text-7xl font-bold text-primary mb-6">
               {t('hero.title')}
             </h1>
+            <p className="text-lg md:text-xl font-semibold text-primary/80 mb-4">
+              Future Leaders Meeting Place
+            </p>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               {t('hero.subtitle')}
             </p>
