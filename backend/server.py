@@ -93,10 +93,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     age_group: Optional[AgeGroup] = None  # For students
+    language: str = "en"  # Default language
 
 class User(UserBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     age_group: Optional[AgeGroup] = None
+    language: str = "en"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
 
@@ -405,6 +407,39 @@ async def login_user(login_data: UserLogin):
 @api_router.get("/me", response_model=User)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user
+
+@api_router.patch("/me/language")
+async def update_user_language(
+    language: str,
+    current_user: User = Depends(get_current_user)
+):
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {"language": language}}
+    )
+    return {"message": "Language updated", "language": language}
+
+# Leaderboard Routes
+@api_router.get("/leaderboard")
+async def get_leaderboard(period: str = "all"):
+    """Get leaderboard - all time, weekly, or monthly"""
+    # Get all student progress sorted by points
+    leaderboard = await db.progress.find({}).sort("points", -1).limit(100).to_list(100)
+    
+    # Enrich with user data
+    result = []
+    for entry in leaderboard:
+        user = await db.users.find_one({"id": entry["student_id"]}, {"_id": 0, "hashed_password": 0})
+        if user:
+            result.append({
+                "rank": len(result) + 1,
+                "student_name": user.get("full_name", "Anonymous"),
+                "points": entry.get("points", 0),
+                "activities_completed": entry.get("activities_completed", 0),
+                "badges_count": len(entry.get("badges_earned", []))
+            })
+    
+    return result
 
 # Activities Routes
 @api_router.get("/activities")

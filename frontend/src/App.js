@@ -1,16 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
+import './i18n';
 import './App.css';
+
+// Import useAuth hook
+import { useAuth } from './hooks/useAuth';
 
 // Lucide icons
 import { 
   Sparkles, Trophy, BookOpen, Users, Settings, LogOut, Menu, X,
   ArrowRight, CheckCircle, Clock, Star, Brain, Cpu, Database,
-  Play, Award, TrendingUp, User, Home, Plus, Upload, Check
+  Play, Award, TrendingUp, User, Home, Plus, Upload, Check, Volume2
 } from 'lucide-react';
+
+// Components
+import LanguageSelector from './components/LanguageSelector';
+import VoicePlayer from './components/VoicePlayer';
+
+// Pages
+import ParentDashboard from './pages/ParentDashboard';
+import TeacherDashboard from './pages/TeacherDashboard';
+import Leaderboard from './pages/Leaderboard';
 
 // ShadCN UI Components
 import { Button } from './components/ui/button';
@@ -25,14 +40,8 @@ import { toast } from 'sonner';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-// Auth Context
-const AuthContext = React.createContext(null);
-
-const useAuth = () => {
-  const context = React.useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
-};
+// Auth Context - export so it can be used in hooks
+export const AuthContext = React.createContext(null);
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -84,9 +93,15 @@ const AuthProvider = ({ children }) => {
 // Landing Page
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen">
+      {/* Header with Language Selector */}
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSelector />
+      </div>
+      
       {/* Hero Section */}
       <div className="hero-gradient min-h-screen flex items-center justify-center px-4">
         <div className="max-w-6xl mx-auto text-center">
@@ -97,10 +112,10 @@ const LandingPage = () => {
           >
             <div className="mb-6 text-6xl">🎓</div>
             <h1 className="text-5xl md:text-7xl font-bold text-primary mb-6">
-              Unplugged AI Academy
+              {t('hero.title')}
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Learn AI & Computer Science through fun, hands-on activities — no computers needed!
+              {t('hero.subtitle')}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Button 
@@ -109,7 +124,7 @@ const LandingPage = () => {
                 onClick={() => navigate('/register')}
                 data-testid="primary-cta-start-free-button"
               >
-                Start Learning Free <ArrowRight className="ml-2" />
+                {t('hero.cta')} <ArrowRight className="ml-2" />
               </Button>
               <Button 
                 size="lg" 
@@ -117,7 +132,7 @@ const LandingPage = () => {
                 className="h-14 px-8 text-lg button-hover"
                 onClick={() => navigate('/login')}
               >
-                Login
+                {t('login')}
               </Button>
             </div>
           </motion.div>
@@ -132,22 +147,22 @@ const LandingPage = () => {
             <Card className="card-shadow">
               <CardContent className="pt-6">
                 <Brain className="w-12 h-12 text-primary mb-4 mx-auto" />
-                <h3 className="text-xl font-semibold mb-2">Algorithms</h3>
-                <p className="text-muted-foreground">Sorting, searching, and problem-solving through physical activities</p>
+                <h3 className="text-xl font-semibold mb-2">{t('features.algorithms')}</h3>
+                <p className="text-muted-foreground">{t('features.algorithms.desc')}</p>
               </CardContent>
             </Card>
             <Card className="card-shadow">
               <CardContent className="pt-6">
                 <Cpu className="w-12 h-12 text-primary mb-4 mx-auto" />
-                <h3 className="text-xl font-semibold mb-2">AI & ML</h3>
-                <p className="text-muted-foreground">Pattern recognition, decision trees, and neural networks</p>
+                <h3 className="text-xl font-semibold mb-2">{t('features.ai')}</h3>
+                <p className="text-muted-foreground">{t('features.ai.desc')}</p>
               </CardContent>
             </Card>
             <Card className="card-shadow">
               <CardContent className="pt-6">
                 <Database className="w-12 h-12 text-primary mb-4 mx-auto" />
-                <h3 className="text-xl font-semibold mb-2">Data & Logic</h3>
-                <p className="text-muted-foreground">Binary, logic gates, encryption, and compression</p>
+                <h3 className="text-xl font-semibold mb-2">{t('features.data')}</h3>
+                <p className="text-muted-foreground">{t('features.data.desc')}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -327,6 +342,7 @@ const AuthPage = ({ mode }) => {
 // Student Dashboard
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [activities, setActivities] = useState([]);
   const [progress, setProgress] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -387,12 +403,18 @@ const StudentDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">Welcome, {user?.full_name}! 👋</h1>
-              <p className="text-muted-foreground">Ready to learn something new?</p>
+              <h1 className="text-3xl font-bold">{t('welcome')}, {user?.full_name}! 👋</h1>
+              <p className="text-muted-foreground">{t('ready')}</p>
             </div>
-            <Button variant="ghost" onClick={logout} data-testid="logout-button">
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/leaderboard')} data-testid="leaderboard-button">
+                <Trophy className="mr-2 h-4 w-4" /> Leaderboard
+              </Button>
+              <LanguageSelector />
+              <Button variant="ghost" onClick={logout} data-testid="logout-button">
+                <LogOut className="mr-2 h-4 w-4" /> {t('logout')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -506,9 +528,27 @@ const StudentDashboard = () => {
   );
 };
 
+// Import at the top for language names
+const LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'ta', name: 'தமிழ்' },
+  { code: 'si', name: 'සිංහල' },
+  { code: 'hi', name: 'हिन्दी' },
+  { code: 'ms', name: 'Bahasa Melayu' },
+  { code: 'tl', name: 'Filipino' },
+  { code: 'zh', name: '简体中文' },
+  { code: 'th', name: 'ไทย' },
+  { code: 'ur', name: 'اردو' },
+  { code: 'bn', name: 'বাংলা' },
+  { code: 'zh-TW', name: '繁體中文' },
+  { code: 'ko', name: '한국어' },
+  { code: 'ja', name: '日本語' }
+];
+
 // Activity Detail Page
 const ActivityDetail = () => {
   const { id } = useParams();
+  const { t } = useTranslation();
   const [activity, setActivity] = useState(null);
   const [completed, setCompleted] = useState(false);
   const navigate = useNavigate();
@@ -564,7 +604,15 @@ const ActivityDetail = () => {
             )}
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">📋 Instructions</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-semibold">📋 {t('activity.instructions')}</h3>
+                <VoicePlayer text={activity.instructions.join('. ')} />
+              </div>
+              {i18n.language !== 'en' && (
+                <p className="text-sm text-muted-foreground mb-3 italic">
+                  🎧 Audio plays in {LANGUAGES.find(l => l.code === i18n.language)?.name} first, then English
+                </p>
+              )}
               <ol className="space-y-2">
                 {activity.instructions.map((instruction, index) => (
                   <li key={index} className="flex gap-3">
@@ -578,7 +626,10 @@ const ActivityDetail = () => {
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-3">🎯 Learning Objectives</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-semibold">🎯 {t('activity.objectives')}</h3>
+                <VoicePlayer text={activity.learning_objectives.join('. ')} />
+              </div>
               <ul className="space-y-2">
                 {activity.learning_objectives.map((objective, index) => (
                   <li key={index} className="flex items-start gap-2">
@@ -611,9 +662,6 @@ const ActivityDetail = () => {
   );
 };
 
-// Fix import
-import { useParams } from 'react-router-dom';
-
 // Main App
 function App() {
   return (
@@ -625,6 +673,9 @@ function App() {
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
           <Route path="/activity/:id" element={<ProtectedRoute><ActivityDetail /></ProtectedRoute>} />
+          <Route path="/parent" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
+          <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
