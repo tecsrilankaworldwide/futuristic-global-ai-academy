@@ -1053,8 +1053,9 @@ const LANGUAGES = [
 // Activity Detail Page
 const ActivityDetail = () => {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activity, setActivity] = useState(null);
+  const [activityEnglish, setActivityEnglish] = useState(null);
   const [completed, setCompleted] = useState(false);
   const navigate = useNavigate();
 
@@ -1067,6 +1068,14 @@ const ActivityDetail = () => {
       // Fetch with language parameter for translation
       const { data } = await axios.get(`${API}/activities/${id}?lang=${i18n.language}`);
       setActivity(data);
+      
+      // Also fetch English version for bilingual voice
+      if (i18n.language !== 'en') {
+        const { data: enData } = await axios.get(`${API}/activities/${id}?lang=en`);
+        setActivityEnglish(enData);
+      } else {
+        setActivityEnglish(data);
+      }
     } catch (error) {
       toast.error('Activity not found');
       navigate('/dashboard');
@@ -1116,7 +1125,10 @@ const ActivityDetail = () => {
                   <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
                     📚 {activity.topic_explanation_title}
                   </h3>
-                  <VoicePlayer text={activity.topic_explanation} />
+                  <VoicePlayer 
+                    text={activityEnglish?.topic_explanation || activity.topic_explanation} 
+                    translatedText={activity.topic_explanation} 
+                  />
                 </div>
                 <p className="text-base leading-relaxed whitespace-pre-line">
                   {activity.topic_explanation}
@@ -1127,7 +1139,10 @@ const ActivityDetail = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xl font-semibold">📋 {t('activity.instructions')}</h3>
-                <VoicePlayer text={activity.instructions.join('. ')} />
+                <VoicePlayer 
+                  text={activityEnglish?.instructions?.join('. ') || activity.instructions.join('. ')} 
+                  translatedText={activity.instructions.join('. ')} 
+                />
               </div>
               <ol className="space-y-2">
                 {activity.instructions.map((instruction, index) => (
@@ -1144,7 +1159,10 @@ const ActivityDetail = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xl font-semibold">🎯 {t('activity.objectives')}</h3>
-                <VoicePlayer text={activity.learning_objectives.join('. ')} />
+                <VoicePlayer 
+                  text={activityEnglish?.learning_objectives?.join('. ') || activity.learning_objectives.join('. ')} 
+                  translatedText={activity.learning_objectives.join('. ')} 
+                />
               </div>
               <ul className="space-y-2">
                 {activity.learning_objectives.map((objective, index) => (
