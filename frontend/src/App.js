@@ -98,14 +98,14 @@ const LandingPage = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen watermark-main page-border-main">
       {/* Header with Language Selector */}
       <div className="absolute top-4 right-4 z-10">
         <LanguageSelector />
       </div>
       
       {/* Hero Section */}
-      <div className="hero-gradient min-h-screen flex items-center justify-center px-4">
+      <div className="hero-gradient min-h-screen flex items-center justify-center px-4 scan-line-effect">
         <div className="max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -254,8 +254,8 @@ const AuthPage = ({ mode }) => {
   };
 
   return (
-    <div className="min-h-screen hero-gradient flex items-center justify-center px-4">
-      <Card className="w-full max-w-md card-shadow">
+    <div className="min-h-screen hero-gradient flex items-center justify-center px-4 watermark-sub page-border-main">
+      <Card className="w-full max-w-md card-shadow cyan-frame">
         <CardHeader>
           <CardTitle className="text-3xl text-center">
             {mode === 'register' ? 'Create Account' : 'Welcome Back'}
@@ -405,9 +405,9 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background watermark-main page-border-main">
       {/* Header */}
-      <div className="dashboard-gradient border-b">
+      <div className="dashboard-gradient border-b dashboard-header-cyan scan-line-effect">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
@@ -509,7 +509,7 @@ const StudentDashboard = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activities.map((activity) => (
-              <Card key={activity.id} className="activity-card cursor-pointer" onClick={() => navigate(`/activity/${activity.id}`)}>
+              <Card key={activity.id} className="activity-card cursor-pointer cyan-glow-card" onClick={() => navigate(`/activity/${activity.id}`)}>
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
                     <Badge variant="secondary">{activity.age_group}</Badge>
@@ -631,8 +631,8 @@ const PricingPage = () => {
   const selectedPlanDetails = plans.find(p => p.id === selectedPlan);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="dashboard-gradient border-b">
+    <div className="min-h-screen bg-background watermark-main page-border-main">
+      <div className="dashboard-gradient border-b dashboard-header-cyan scan-line-effect">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
@@ -1097,13 +1097,13 @@ const ActivityDetail = () => {
   if (!activity) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background watermark-sub page-border-main">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
-          ← Back to Activities
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Activities
         </Button>
 
-        <Card className="card-shadow">
+        <Card className="card-shadow cyan-glow-card">
           <CardHeader>
             <div className="flex gap-2 mb-4">
               <Badge>{activity.age_group}</Badge>

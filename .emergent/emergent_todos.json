@@ -1,26 +1,26 @@
 [
   {
-    "content": "Build Parent Dashboard (manage children, view their progress)",
+    "content": "Build Parent Dashboard",
     "status": "completed"
   },
   {
-    "content": "Build Teacher Dashboard (create custom activities, manage students)",
+    "content": "Build Teacher Dashboard",
     "status": "completed"
   },
   {
-    "content": "Build Leaderboard (points system, rankings)",
+    "content": "Build Leaderboard",
     "status": "completed"
   },
   {
-    "content": "Add missing backend endpoints for all features",
+    "content": "Design robotic/space futuristic watermarks for main menus & submenus",
     "status": "completed"
   },
   {
-    "content": "Test all new features",
+    "content": "Add cyan blue accent borders to pages",
+    "status": "completed"
+  },
+  {
+    "content": "Push to GitHub: tecsrilankaworldwide/tec-platform-production",
     "status": "in_progress"
-  },
-  {
-    "content": "Push to GitHub",
-    "status": "pending"
   }
 ]

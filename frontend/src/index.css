@@ -35,6 +35,11 @@
     --destructive-foreground: 0 0% 100%;
 
     --radius: 0.9rem;
+
+    /* Cyan accent */
+    --cyan-glow: 188 80% 55%;
+    --cyan-border: 188 70% 60%;
+    --cyan-subtle: 188 50% 90%;
   }
 }
 
@@ -82,4 +87,190 @@ body::before {
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-primary/50;
+}
+
+/* =====================================================
+   FUTURISTIC ROBOTIC WATERMARK - MAIN MENUS
+   ===================================================== */
+
+/* Main page watermark: Robotic circuit + space grid pattern */
+.watermark-main {
+  position: relative;
+  overflow: hidden;
+}
+
+.watermark-main::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background-image: 
+    /* Circuit board traces */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='%23157a8c' stroke-width='1.5'%3E%3C!-- Robot head outline --%3E%3Crect x='140' y='60' width='120' height='100' rx='12'/%3E%3Ccircle cx='175' cy='100' r='14'/%3E%3Ccircle cx='225' cy='100' r='14'/%3E%3Crect x='185' y='130' width='30' height='8' rx='2'/%3E%3C!-- Antenna --%3E%3Cline x1='200' y1='60' x2='200' y2='30'/%3E%3Ccircle cx='200' cy='25' r='5'/%3E%3C!-- Body --%3E%3Crect x='155' y='170' width='90' height='80' rx='8'/%3E%3C!-- Arms --%3E%3Cline x1='155' y1='190' x2='120' y2='210'/%3E%3Ccircle cx='115' cy='215' r='8'/%3E%3Cline x1='245' y1='190' x2='280' y2='210'/%3E%3Ccircle cx='285' cy='215' r='8'/%3E%3C!-- Legs --%3E%3Cline x1='175' y1='250' x2='175' y2='290'/%3E%3Crect x='160' y='290' width='30' height='10' rx='3'/%3E%3Cline x1='225' y1='250' x2='225' y2='290'/%3E%3Crect x='210' y='290' width='30' height='10' rx='3'/%3E%3C!-- Circuit traces --%3E%3Cpath d='M50,200 L100,200 L100,150 L130,150'/%3E%3Ccircle cx='50' cy='200' r='3' fill='%23157a8c'/%3E%3Cpath d='M350,200 L300,200 L300,150 L270,150'/%3E%3Ccircle cx='350' cy='200' r='3' fill='%23157a8c'/%3E%3Cpath d='M200,320 L200,360 L150,360'/%3E%3Ccircle cx='145' cy='360' r='3' fill='%23157a8c'/%3E%3Cpath d='M200,320 L200,360 L250,360'/%3E%3Ccircle cx='255' cy='360' r='3' fill='%23157a8c'/%3E%3C!-- Stars --%3E%3Ccircle cx='30' cy='40' r='2' fill='%23157a8c'/%3E%3Ccircle cx='370' cy='50' r='1.5' fill='%23157a8c'/%3E%3Ccircle cx='60' cy='350' r='1' fill='%23157a8c'/%3E%3Ccircle cx='340' cy='340' r='2' fill='%23157a8c'/%3E%3Ccircle cx='320' cy='80' r='1' fill='%23157a8c'/%3E%3Ccircle cx='80' cy='100' r='1.5' fill='%23157a8c'/%3E%3C!-- Gear wheels --%3E%3Ccircle cx='60' cy='280' r='18' stroke-dasharray='6 4'/%3E%3Ccircle cx='60' cy='280' r='8'/%3E%3Ccircle cx='340' cy='120' r='15' stroke-dasharray='5 3'/%3E%3Ccircle cx='340' cy='120' r='6'/%3E%3C!-- Binary stream --%3E%3Ctext x='15' y='170' font-size='8' fill='%23157a8c' opacity='0.5' font-family='monospace'%3E01101%3C/text%3E%3Ctext x='330' y='290' font-size='8' fill='%23157a8c' opacity='0.5' font-family='monospace'%3E10010%3C/text%3E%3C/g%3E%3C/svg%3E"),
+    /* Grid pattern */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M0 0 L80 0 L80 80 L0 80 Z' fill='none' stroke='%23157a8c' stroke-width='0.3' opacity='0.3'/%3E%3Ccircle cx='0' cy='0' r='1' fill='%23157a8c' opacity='0.4'/%3E%3Ccircle cx='80' cy='0' r='1' fill='%23157a8c' opacity='0.4'/%3E%3Ccircle cx='0' cy='80' r='1' fill='%23157a8c' opacity='0.4'/%3E%3Ccircle cx='80' cy='80' r='1' fill='%23157a8c' opacity='0.4'/%3E%3C/svg%3E");
+  background-size: 400px 400px, 80px 80px;
+  background-position: center center, 0 0;
+}
+
+.watermark-main > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* =====================================================
+   FUTURISTIC WATERMARK - SUB MENUS (lighter, smaller)
+   ===================================================== */
+
+.watermark-sub {
+  position: relative;
+  overflow: hidden;
+}
+
+.watermark-sub::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.025;
+  background-image: 
+    /* Smaller circuit pattern */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='%2320a0b8' stroke-width='1'%3E%3C!-- CPU chip --%3E%3Crect x='110' y='110' width='80' height='80' rx='6'/%3E%3Crect x='125' y='125' width='50' height='50' rx='3'/%3E%3C!-- Chip pins --%3E%3Cline x1='130' y1='110' x2='130' y2='85'/%3E%3Cline x1='150' y1='110' x2='150' y2='85'/%3E%3Cline x1='170' y1='110' x2='170' y2='85'/%3E%3Cline x1='130' y1='190' x2='130' y2='215'/%3E%3Cline x1='150' y1='190' x2='150' y2='215'/%3E%3Cline x1='170' y1='190' x2='170' y2='215'/%3E%3Cline x1='110' y1='130' x2='85' y2='130'/%3E%3Cline x1='110' y1='150' x2='85' y2='150'/%3E%3Cline x1='110' y1='170' x2='85' y2='170'/%3E%3Cline x1='190' y1='130' x2='215' y2='130'/%3E%3Cline x1='190' y1='150' x2='215' y2='150'/%3E%3Cline x1='190' y1='170' x2='215' y2='170'/%3E%3C!-- Orbital rings --%3E%3Cellipse cx='150' cy='150' rx='130' ry='40' transform='rotate(30,150,150)' stroke-dasharray='4 6'/%3E%3Cellipse cx='150' cy='150' rx='120' ry='35' transform='rotate(-30,150,150)' stroke-dasharray='3 5'/%3E%3C!-- Dots --%3E%3Ccircle cx='30' cy='30' r='2' fill='%2320a0b8'/%3E%3Ccircle cx='270' cy='30' r='1.5' fill='%2320a0b8'/%3E%3Ccircle cx='30' cy='270' r='1' fill='%2320a0b8'/%3E%3Ccircle cx='270' cy='270' r='2' fill='%2320a0b8'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 300px 300px;
+  background-position: center;
+}
+
+.watermark-sub > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* =====================================================
+   CYAN ACCENT BORDERS
+   ===================================================== */
+
+/* Main page cyan glow border */
+.page-border-main {
+  border-left: 3px solid hsl(188, 70%, 55%);
+  border-right: 3px solid hsl(188, 70%, 55%);
+  box-shadow: 
+    inset 3px 0 12px -4px hsla(188, 80%, 55%, 0.15),
+    inset -3px 0 12px -4px hsla(188, 80%, 55%, 0.15);
+}
+
+/* Top cyan accent line for headers */
+.cyan-top-accent {
+  border-top: 2px solid hsl(188, 70%, 55%);
+  box-shadow: 0 -2px 8px hsla(188, 80%, 55%, 0.2);
+}
+
+/* Bottom cyan accent */
+.cyan-bottom-accent {
+  border-bottom: 2px solid hsl(188, 70%, 55%);
+  box-shadow: 0 2px 8px hsla(188, 80%, 55%, 0.15);
+}
+
+/* Full cyan frame for cards/sections */
+.cyan-frame {
+  border: 1px solid hsla(188, 60%, 60%, 0.25);
+  box-shadow: 
+    0 0 0 1px hsla(188, 60%, 60%, 0.08),
+    0 2px 8px hsla(188, 60%, 50%, 0.06);
+}
+
+/* Glowing cyan card border on hover */
+.cyan-glow-card {
+  border: 1px solid hsla(188, 50%, 70%, 0.2);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cyan-glow-card:hover {
+  border-color: hsla(188, 70%, 55%, 0.4);
+  box-shadow: 
+    0 0 0 1px hsla(188, 70%, 55%, 0.1),
+    0 4px 16px hsla(188, 60%, 50%, 0.1);
+}
+
+/* Dashboard header with cyan underline */
+.dashboard-header-cyan {
+  position: relative;
+}
+
+.dashboard-header-cyan::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    hsl(188, 70%, 55%) 20%, 
+    hsl(188, 70%, 55%) 80%, 
+    transparent
+  );
+  opacity: 0.6;
+}
+
+/* Futuristic scan line animation for headers */
+@keyframes scanLine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.scan-line-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, hsla(188, 80%, 60%, 0.06), transparent);
+  animation: scanLine 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Corner accent decorations */
+.corner-accents {
+  position: relative;
+}
+
+.corner-accents::before,
+.corner-accents::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.corner-accents::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid hsl(188, 70%, 55%);
+  border-left: 2px solid hsl(188, 70%, 55%);
+  opacity: 0.4;
+}
+
+.corner-accents::after {
+  top: 0;
+  right: 0;
+  border-top: 2px solid hsl(188, 70%, 55%);
+  border-right: 2px solid hsl(188, 70%, 55%);
+  opacity: 0.4;
 }

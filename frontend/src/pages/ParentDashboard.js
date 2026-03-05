@@ -83,8 +83,8 @@ export default function ParentDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="dashboard-gradient border-b">
+    <div className="min-h-screen bg-background watermark-main page-border-main">
+      <div className="dashboard-gradient border-b dashboard-header-cyan scan-line-effect">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>

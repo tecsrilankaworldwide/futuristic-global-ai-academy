@@ -79,3 +79,18 @@ agenthub/agents/youtube/db
 # Mobile development
 android-sdk/ frontend/node_modules/.cache/default-development/0.pack
 frontend/node_modules/.cache/default-development/0.pack
+
+# Backend environment
+backend/.env
+
+# Test reports
+test_reports/
+
+# Supervisor logs
+/var/log/supervisor/
+
+# PDF files (large)
+frontend/public/qr_code_payment.pdf
+
+# Plan files
+plan.md
