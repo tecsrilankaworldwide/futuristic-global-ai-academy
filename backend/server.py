@@ -501,6 +501,12 @@ async def get_activity(activity_id: str, lang: Optional[str] = None):
             if activity.get('description'):
                 activity['description'] = translator.translate(activity['description'], dest=target_lang).text
             
+            # Translate topic explanation
+            if activity.get('topic_explanation_title'):
+                activity['topic_explanation_title'] = translator.translate(activity['topic_explanation_title'], dest=target_lang).text
+            if activity.get('topic_explanation'):
+                activity['topic_explanation'] = translator.translate(activity['topic_explanation'], dest=target_lang).text
+            
             # Translate instructions
             if activity.get('instructions'):
                 translated_instructions = []

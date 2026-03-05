@@ -604,6 +604,21 @@ const ActivityDetail = () => {
               <img src={activity.image_url} alt={activity.title} className="w-full rounded-lg" />
             )}
 
+            {/* Topic Explanation */}
+            {activity.topic_explanation_title && (
+              <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
+                    📚 {activity.topic_explanation_title}
+                  </h3>
+                  <VoicePlayer text={activity.topic_explanation} />
+                </div>
+                <p className="text-base leading-relaxed whitespace-pre-line">
+                  {activity.topic_explanation}
+                </p>
+              </div>
+            )}
+
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xl font-semibold">📋 {t('activity.instructions')}</h3>
